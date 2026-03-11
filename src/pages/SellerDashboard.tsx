@@ -508,24 +508,26 @@ export function SellerDashboard() {
     };
 
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-[#3d1a7a]">🏬 Your Store</h2>
-        <div className="bg-card rounded-null-xl border border-border p-6">
-          <div className="flex items-center gap-4 mb-4">
-            {storeData.logo ? (
-              <img src={storeData.logo} alt="Store logo" className="w-16 h-16 object-cover rounded-null-xl" />
-            ) : (
-              <div className="w-16 h-16 bg-muted rounded-null-xl flex items-center justify-center">
-                <StoreIcon size={28} className="text-[#5d2ba3]/70" />
+      <div className="space-y-4 sm:space-y-6 w-full min-w-0 overflow-hidden">
+        <h2 className="text-xl sm:text-2xl font-bold text-primary">🏬 Your Store</h2>
+        <div className="bg-card rounded-xl border border-border p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
+              {storeData.logo ? (
+                <img src={storeData.logo} alt="Store logo" className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-xl flex-shrink-0" />
+              ) : (
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-xl flex items-center justify-center flex-shrink-0">
+                  <StoreIcon size={24} className="text-primary/70" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg sm:text-xl font-bold text-primary truncate">{storeData.name}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">/store/{storeData.slug}</p>
               </div>
-            )}
-            <div>
-              <h3 className="text-xl font-bold text-[#3d1a7a]">{storeData.name}</h3>
-              <p className="text-sm text-muted-foreground">/store/{storeData.slug}</p>
             </div>
-            <span className={`ml-auto px-3 py-1 rounded-null-full text-sm font-bold ${storeData.status === 'ACTIVE' ? 'bg-[#5d2ba3]/20 text-[#3d1a7a]' :
-              storeData.status === 'FROZEN' ? 'bg-[#4F4A41]/20 text-[#4F4A41]' :
-                'bg-[#6E6658]/20 text-[#6E6658]'
+            <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 ${storeData.status === 'ACTIVE' ? 'bg-primary/20 text-primary' :
+              storeData.status === 'FROZEN' ? 'bg-destructive/20 text-destructive' :
+                'bg-muted text-muted-foreground'
               }`}>
               {storeData.status || 'INACTIVE'}
             </span>
@@ -533,12 +535,12 @@ export function SellerDashboard() {
           {storefrontUrl && (
             <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border overflow-hidden">
               <p className="text-xs font-semibold text-muted-foreground mb-2">Storefront link (share with customers)</p>
-              <div className="flex gap-2 min-w-0">
-                <code className="flex-1 min-w-0 truncate block text-sm py-2 px-3 bg-background rounded border border-border overflow-hidden text-ellipsis whitespace-nowrap">{storefrontUrl}</code>
+              <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+                <code className="flex-1 min-w-0 truncate block text-xs sm:text-sm py-2 px-3 bg-background rounded border border-border overflow-hidden text-ellipsis whitespace-nowrap">{storefrontUrl}</code>
                 <button
                   type="button"
                   onClick={copyStorefrontLink}
-                  className="flex-shrink-0 px-4 py-2 rounded-lg bg-[#3d1a7a] text-white hover:bg-[#250e52] transition text-sm font-semibold whitespace-nowrap"
+                  className="flex-shrink-0 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition text-sm font-semibold whitespace-nowrap w-full sm:w-auto"
                 >
                   {storefrontCopied ? 'Copied!' : 'Copy'}
                 </button>
@@ -550,7 +552,7 @@ export function SellerDashboard() {
           )}
           <button
             onClick={() => setShowStoreDashboard(true)}
-            className="w-full px-4 py-3 rounded-null-xl bg-primary text-primary-foreground hover:bg-primary/90 transition font-semibold"
+            className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition font-semibold text-sm sm:text-base"
           >
             Open Store Dashboard
           </button>
