@@ -418,7 +418,7 @@ export async function acceptOrder(orderId: string) {
   const { data, error } = await supabase
     .from("transactions")
     .update({
-      status: "ACCEPTED",
+      status: "accepted",
       accepted_at: new Date().toISOString(),
     })
     .eq("id", orderId)
@@ -439,7 +439,7 @@ export async function rejectOrder(orderId: string, reason?: string) {
   const { data, error } = await supabase
     .from("transactions")
     .update({
-      status: "CANCELLED",
+      status: "cancelled",
       rejection_reason: reason,
       rejected_at: new Date().toISOString(),
     })
@@ -466,7 +466,7 @@ export async function addShippingInfo(orderId: string, data: {
   const { data: updated, error } = await supabase
     .from("transactions")
     .update({
-      status: "SHIPPED",
+      status: "shipped",
       courier_name: data.courierName,
       tracking_number: data.trackingNumber,
       estimated_delivery_date: data.estimatedDeliveryDate,
