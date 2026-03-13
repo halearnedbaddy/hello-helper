@@ -558,13 +558,77 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Create user with Supabase Auth
+  const supabaseAnon = createAnonClient(req);
+
+  // Preferred path: use service role to create a confirmed user
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: emailNormalized,
     password,
     email_confirm: true,
     user_metadata: { name, role: userRole },
   });
+
+  // If service role key is misconfigured, gracefully fall back to anon sign-up
+  if (authError && authError.message.toLowerCase().includes("invalid api key")) {
+    console.warn("Service role key invalid in auth-api; falling back to anon signUp for register-email");
+
+    const { data: signUpData, error: signUpError } = await supabaseAnon.auth.signUp({
+      email: emailNormalized,
+      password,
+      options: {
+        data: { name, role: userRole, ...(normalizedPhone ? { phone: normalizedPhone } : {}) },
+      },
+    });
+
+    if (signUpError) {
+      const msg = signUpError.message || "Registration failed";
+      if (msg.toLowerCase().includes("already")) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Email already registered" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ success: false, error: msg }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!signUpData.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Registration failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (normalizedPhone && signUpData.session?.access_token) {
+      const signedInClient = createAnonClient(req, signUpData.session.access_token);
+      const { error: profileUpdateError } = await signedInClient
+        .from("profiles")
+        .update({ phone: normalizedPhone })
+        .eq("user_id", signUpData.user.id);
+      if (profileUpdateError) {
+        console.error("Profile update error after anon signUp:", profileUpdateError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Registration successful",
+        data: {
+          user: {
+            id: signUpData.user.id,
+            email: emailNormalized,
+            name,
+            role: userRole,
+          },
+          session: signUpData.session,
+        },
+      }),
+      { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   if (authError) {
     console.error("Auth error:", authError);
@@ -577,6 +641,13 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     return new Response(
       JSON.stringify({ success: false, error: authError.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!authData.user) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Registration failed" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -609,6 +680,8 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     .eq("user_id", authData.user.id)
     .single();
 
+  const resolvedRole = userRoleData?.role === "admin" ? "admin" : userRole;
+
   return new Response(
     JSON.stringify({
       success: true,
@@ -618,7 +691,7 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
           id: authData.user.id,
           email: email.toLowerCase(),
           name,
-          role: userRoleData?.role || userRole,
+          role: resolvedRole,
         },
       },
     }),
