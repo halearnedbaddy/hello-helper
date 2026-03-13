@@ -6,13 +6,30 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://krkybhborwvcbjzjcghw.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const FALLBACK_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtya3liaGJvcnd2Y2JqempjZ2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTYwNDksImV4cCI6MjA4NzA3MjA0OX0.mwm0aTd9ZBltJD5VgOFN7vZ6jibpKsF8dGdcSwOg1cw";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? FALLBACK_SUPABASE_ANON_KEY;
 
-// Create admin client for OTP operations
+function getRequestApiKey(req: Request): string {
+  return (req.headers.get("apikey") || req.headers.get("x-api-key") || "").trim();
+}
+
+function createAnonClient(req: Request, accessToken?: string) {
+  const requestApiKey = getRequestApiKey(req);
+  const anonKey = requestApiKey || SUPABASE_ANON_KEY;
+
+  return createClient(SUPABASE_URL, anonKey, {
+    global: {
+      headers: {
+        ...(requestApiKey ? { apikey: requestApiKey } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    },
+  });
+}
+
+// Create admin client for privileged operations
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-// Create anon client for end-user auth flows (sign-in / sign-up)
-const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Generate 6-digit OTP
 function generateOTPCode(): string {
@@ -541,13 +558,77 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Create user with Supabase Auth
+  const supabaseAnon = createAnonClient(req);
+
+  // Preferred path: use service role to create a confirmed user
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: emailNormalized,
     password,
     email_confirm: true,
     user_metadata: { name, role: userRole },
   });
+
+  // If service role key is misconfigured, gracefully fall back to anon sign-up
+  if (authError && authError.message.toLowerCase().includes("invalid api key")) {
+    console.warn("Service role key invalid in auth-api; falling back to anon signUp for register-email");
+
+    const { data: signUpData, error: signUpError } = await supabaseAnon.auth.signUp({
+      email: emailNormalized,
+      password,
+      options: {
+        data: { name, role: userRole, ...(normalizedPhone ? { phone: normalizedPhone } : {}) },
+      },
+    });
+
+    if (signUpError) {
+      const msg = signUpError.message || "Registration failed";
+      if (msg.toLowerCase().includes("already")) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Email already registered" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ success: false, error: msg }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!signUpData.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Registration failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (normalizedPhone && signUpData.session?.access_token) {
+      const signedInClient = createAnonClient(req, signUpData.session.access_token);
+      const { error: profileUpdateError } = await signedInClient
+        .from("profiles")
+        .update({ phone: normalizedPhone })
+        .eq("user_id", signUpData.user.id);
+      if (profileUpdateError) {
+        console.error("Profile update error after anon signUp:", profileUpdateError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Registration successful",
+        data: {
+          user: {
+            id: signUpData.user.id,
+            email: emailNormalized,
+            name,
+            role: userRole,
+          },
+          session: signUpData.session,
+        },
+      }),
+      { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   if (authError) {
     console.error("Auth error:", authError);
@@ -560,6 +641,13 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     return new Response(
       JSON.stringify({ success: false, error: authError.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!authData.user) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Registration failed" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -592,6 +680,8 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
     .eq("user_id", authData.user.id)
     .single();
 
+  const resolvedRole = userRoleData?.role === "admin" ? "admin" : userRole;
+
   return new Response(
     JSON.stringify({
       success: true,
@@ -601,7 +691,7 @@ async function handleRegisterEmail(req: Request): Promise<Response> {
           id: authData.user.id,
           email: email.toLowerCase(),
           name,
-          role: userRoleData?.role || userRole,
+          role: resolvedRole,
         },
       },
     }),
@@ -621,7 +711,9 @@ async function handleLoginEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Sign in with Supabase Auth (use anon client for user auth)
+  const supabaseAnon = createAnonClient(req);
+
+  // Sign in with Supabase Auth (use request apikey to avoid stale env anon key)
   const { data: authData, error: authError } = await supabaseAnon.auth.signInWithPassword({
     email: emailNormalized,
     password,
@@ -651,27 +743,32 @@ async function handleLoginEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Get profile and role
-  const { data: profile } = await supabaseAdmin
+  if (!authData.user || !authData.session?.access_token) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Authentication failed" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const userClient = createAnonClient(req, authData.session.access_token);
+
+  // Get profile and role using the signed-in user's JWT
+  const { data: profile } = await userClient
     .from("profiles")
     .select("*")
     .eq("user_id", authData.user.id)
-    .single();
+    .maybeSingle();
 
-  // Get all user roles and prioritize admin role
-  const { data: userRoles } = await supabaseAdmin
+  const { data: userRoles } = await userClient
     .from("user_roles")
     .select("role")
     .eq("user_id", authData.user.id);
-  
-  // Priority: admin > seller > buyer
-  const rolePriority = ['admin', 'seller', 'buyer'];
-  const userRole = userRoles?.sort((a, b) => 
-    rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role)
-  )[0];
 
-  // Update last login
-  await supabaseAdmin
+  const metadataRole = normalizeRole((authData.user.user_metadata as { role?: string } | null)?.role);
+  const resolvedRole = userRoles?.some((r) => r.role === "admin") ? "admin" : metadataRole;
+
+  // Update last login (best effort)
+  await userClient
     .from("profiles")
     .update({ last_login: new Date().toISOString() })
     .eq("user_id", authData.user.id);
@@ -686,7 +783,7 @@ async function handleLoginEmail(req: Request): Promise<Response> {
           phone: profile?.phone,
           name: profile?.name,
           email: authData.user.email,
-          role: userRole?.role || "buyer",
+          role: resolvedRole,
         },
         session: authData.session,
       },
@@ -697,7 +794,7 @@ async function handleLoginEmail(req: Request): Promise<Response> {
 
 async function handleGetProfile(req: Request): Promise<Response> {
   const authHeader = req.headers.get("Authorization");
-  
+
   if (!authHeader) {
     return new Response(
       JSON.stringify({ success: false, error: "Unauthorized" }),
@@ -705,10 +802,11 @@ async function handleGetProfile(req: Request): Promise<Response> {
     );
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  
-  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-  
+  const token = authHeader.replace("Bearer ", "").trim();
+  const supabaseAnon = createAnonClient(req);
+
+  const { data: userData, error: userError } = await supabaseAnon.auth.getUser(token);
+
   if (userError || !userData.user) {
     return new Response(
       JSON.stringify({ success: false, error: "Invalid token" }),
@@ -716,17 +814,21 @@ async function handleGetProfile(req: Request): Promise<Response> {
     );
   }
 
-  const { data: profile } = await supabaseAdmin
+  const userClient = createAnonClient(req, token);
+
+  const { data: profile } = await userClient
     .from("profiles")
     .select("*")
     .eq("user_id", userData.user.id)
-    .single();
+    .maybeSingle();
 
-  const { data: userRole } = await supabaseAdmin
+  const { data: userRoles } = await userClient
     .from("user_roles")
     .select("role")
-    .eq("user_id", userData.user.id)
-    .single();
+    .eq("user_id", userData.user.id);
+
+  const metadataRole = normalizeRole((userData.user.user_metadata as { role?: string } | null)?.role);
+  const resolvedRole = userRoles?.some((r) => r.role === "admin") ? "admin" : metadataRole;
 
   return new Response(
     JSON.stringify({
@@ -737,7 +839,7 @@ async function handleGetProfile(req: Request): Promise<Response> {
           phone: profile?.phone,
           name: profile?.name,
           email: profile?.email || userData.user.email,
-          role: userRole?.role || "buyer",
+          role: resolvedRole,
           profilePicture: profile?.profile_picture,
           memberSince: profile?.member_since,
         },

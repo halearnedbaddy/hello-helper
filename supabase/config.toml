@@ -1,5 +1,8 @@
 project_id = "krkybhborwvcbjzjcghw"
 
+[functions.auth-api]
+verify_jwt = false
+
 [functions.storefront-api]
 verify_jwt = false
 
