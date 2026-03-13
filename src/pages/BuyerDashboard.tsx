@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBagIcon, WalletIcon, AlertTriangleIcon, ActivityIcon, LogOutIcon, MenuIcon, XIcon } from '@/components/icons';
 import { BuyerOrders } from '@/components/buyer/BuyerOrders';
