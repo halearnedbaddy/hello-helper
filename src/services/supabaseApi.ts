@@ -439,7 +439,7 @@ export async function rejectOrder(orderId: string, reason?: string) {
   const { data, error } = await supabase
     .from("transactions")
     .update({
-      status: "CANCELLED",
+      status: "cancelled",
       rejection_reason: reason,
       rejected_at: new Date().toISOString(),
     })
