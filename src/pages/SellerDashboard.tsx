@@ -56,7 +56,7 @@ interface SellerProfile {
 export function SellerDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslations();
-  const { logout } = useSupabaseAuth();
+  const { logout, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const { selectedCountry, formatPrice } = useCurrency();
   const [activeTab, setActiveTab] = useState('wallet');
   const [withdrawalModal, setWithdrawalModal] = useState(false);
@@ -64,6 +64,13 @@ export function SellerDashboard() {
   const [showCreateStoreModal, setShowCreateStoreModal] = useState(false);
   const [showStoreDashboard, setShowStoreDashboard] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   // Empty data states - ready for API integration
   const [orders] = useState<Order[]>([]);
