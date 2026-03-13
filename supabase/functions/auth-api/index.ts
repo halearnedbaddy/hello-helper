@@ -6,13 +6,30 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://krkybhborwvcbjzjcghw.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const FALLBACK_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtya3liaGJvcnd2Y2JqempjZ2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTYwNDksImV4cCI6MjA4NzA3MjA0OX0.mwm0aTd9ZBltJD5VgOFN7vZ6jibpKsF8dGdcSwOg1cw";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? FALLBACK_SUPABASE_ANON_KEY;
 
-// Create admin client for OTP operations
+function getRequestApiKey(req: Request): string {
+  return (req.headers.get("apikey") || req.headers.get("x-api-key") || "").trim();
+}
+
+function createAnonClient(req: Request, accessToken?: string) {
+  const requestApiKey = getRequestApiKey(req);
+  const anonKey = requestApiKey || SUPABASE_ANON_KEY;
+
+  return createClient(SUPABASE_URL, anonKey, {
+    global: {
+      headers: {
+        ...(requestApiKey ? { apikey: requestApiKey } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    },
+  });
+}
+
+// Create admin client for privileged operations
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-// Create anon client for end-user auth flows (sign-in / sign-up)
-const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Generate 6-digit OTP
 function generateOTPCode(): string {
