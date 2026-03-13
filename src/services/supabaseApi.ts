@@ -2,9 +2,8 @@
  * Supabase API Service
  * Replaces the old backend API with direct Supabase calls
  */
-// Use the main supabase client from integrations to ensure session sharing
-import { supabase as _supabase } from "@/integrations/supabase/client";
-const supabase = _supabase as any;
+// Use the same Supabase client as auth flows so session/auth headers are consistent
+import { supabase } from "@/lib/supabase";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabaseProject";
 
 // Database enum types (lowercase as defined in Supabase schema)
