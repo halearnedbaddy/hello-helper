@@ -13,7 +13,7 @@ import { CartDrawer, BuyerDetails } from '@/components/store/CartDrawer';
 import { CartItem } from '@/hooks/useCart';
 import { ProductSkeleton } from '@/components/skeletons';
 
-const SUPABASE_URL = "https://pxyyncsnjpuwvnwyfdwx.supabase.co";
+const SUPABASE_URL = "https://krkybhborwvcbjzjcghw.supabase.co";
 
 interface ProductData {
   id: string;
