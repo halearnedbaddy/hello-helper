@@ -466,7 +466,7 @@ export async function addShippingInfo(orderId: string, data: {
   const { data: updated, error } = await supabase
     .from("transactions")
     .update({
-      status: "SHIPPED",
+      status: "shipped",
       courier_name: data.courierName,
       tracking_number: data.trackingNumber,
       estimated_delivery_date: data.estimatedDeliveryDate,
