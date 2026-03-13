@@ -711,7 +711,9 @@ async function handleLoginEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Sign in with Supabase Auth (use anon client for user auth)
+  const supabaseAnon = createAnonClient(req);
+
+  // Sign in with Supabase Auth (use request apikey to avoid stale env anon key)
   const { data: authData, error: authError } = await supabaseAnon.auth.signInWithPassword({
     email: emailNormalized,
     password,
@@ -741,27 +743,32 @@ async function handleLoginEmail(req: Request): Promise<Response> {
     );
   }
 
-  // Get profile and role
-  const { data: profile } = await supabaseAdmin
+  if (!authData.user || !authData.session?.access_token) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Authentication failed" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const userClient = createAnonClient(req, authData.session.access_token);
+
+  // Get profile and role using the signed-in user's JWT
+  const { data: profile } = await userClient
     .from("profiles")
     .select("*")
     .eq("user_id", authData.user.id)
-    .single();
+    .maybeSingle();
 
-  // Get all user roles and prioritize admin role
-  const { data: userRoles } = await supabaseAdmin
+  const { data: userRoles } = await userClient
     .from("user_roles")
     .select("role")
     .eq("user_id", authData.user.id);
-  
-  // Priority: admin > seller > buyer
-  const rolePriority = ['admin', 'seller', 'buyer'];
-  const userRole = userRoles?.sort((a, b) => 
-    rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role)
-  )[0];
 
-  // Update last login
-  await supabaseAdmin
+  const metadataRole = normalizeRole((authData.user.user_metadata as { role?: string } | null)?.role);
+  const resolvedRole = userRoles?.some((r) => r.role === "admin") ? "admin" : metadataRole;
+
+  // Update last login (best effort)
+  await userClient
     .from("profiles")
     .update({ last_login: new Date().toISOString() })
     .eq("user_id", authData.user.id);
@@ -776,7 +783,7 @@ async function handleLoginEmail(req: Request): Promise<Response> {
           phone: profile?.phone,
           name: profile?.name,
           email: authData.user.email,
-          role: userRole?.role || "buyer",
+          role: resolvedRole,
         },
         session: authData.session,
       },
@@ -787,7 +794,7 @@ async function handleLoginEmail(req: Request): Promise<Response> {
 
 async function handleGetProfile(req: Request): Promise<Response> {
   const authHeader = req.headers.get("Authorization");
-  
+
   if (!authHeader) {
     return new Response(
       JSON.stringify({ success: false, error: "Unauthorized" }),
@@ -795,10 +802,11 @@ async function handleGetProfile(req: Request): Promise<Response> {
     );
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  
-  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-  
+  const token = authHeader.replace("Bearer ", "").trim();
+  const supabaseAnon = createAnonClient(req);
+
+  const { data: userData, error: userError } = await supabaseAnon.auth.getUser(token);
+
   if (userError || !userData.user) {
     return new Response(
       JSON.stringify({ success: false, error: "Invalid token" }),
@@ -806,17 +814,21 @@ async function handleGetProfile(req: Request): Promise<Response> {
     );
   }
 
-  const { data: profile } = await supabaseAdmin
+  const userClient = createAnonClient(req, token);
+
+  const { data: profile } = await userClient
     .from("profiles")
     .select("*")
     .eq("user_id", userData.user.id)
-    .single();
+    .maybeSingle();
 
-  const { data: userRole } = await supabaseAdmin
+  const { data: userRoles } = await userClient
     .from("user_roles")
     .select("role")
-    .eq("user_id", userData.user.id)
-    .single();
+    .eq("user_id", userData.user.id);
+
+  const metadataRole = normalizeRole((userData.user.user_metadata as { role?: string } | null)?.role);
+  const resolvedRole = userRoles?.some((r) => r.role === "admin") ? "admin" : metadataRole;
 
   return new Response(
     JSON.stringify({
@@ -827,7 +839,7 @@ async function handleGetProfile(req: Request): Promise<Response> {
           phone: profile?.phone,
           name: profile?.name,
           email: profile?.email || userData.user.email,
-          role: userRole?.role || "buyer",
+          role: resolvedRole,
           profilePicture: profile?.profile_picture,
           memberSince: profile?.member_since,
         },
