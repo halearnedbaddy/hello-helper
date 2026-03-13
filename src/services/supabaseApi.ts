@@ -371,10 +371,10 @@ export async function getSellerStats() {
     .eq("user_id", userId)
     .maybeSingle();
 
-  // Get seller profile from seller_profiles table
+  // Get seller profile from profiles table
   const { data: sellerProfile } = await supabase
-    .from("seller_profiles")
-    .select("business_name, rating, total_reviews")
+    .from("profiles")
+    .select("name, business_name, rating, total_reviews")
     .eq("user_id", userId)
     .maybeSingle();
 
