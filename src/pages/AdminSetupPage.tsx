@@ -61,7 +61,7 @@ export function AdminSetupPage() {
       const accessToken = sessionRes.data.session?.access_token;
       if (accessToken) {
         const res = await fetch(
-          "https://pxyyncsnjpuwvnwyfdwx.supabase.co/functions/v1/auth-api/profile",
+          "https://krkybhborwvcbjzjcghw.supabase.co/functions/v1/auth-api/profile",
           {
             method: "GET",
             headers: {
