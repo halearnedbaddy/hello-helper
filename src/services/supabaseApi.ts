@@ -418,7 +418,7 @@ export async function acceptOrder(orderId: string) {
   const { data, error } = await supabase
     .from("transactions")
     .update({
-      status: "ACCEPTED",
+      status: "accepted",
       accepted_at: new Date().toISOString(),
     })
     .eq("id", orderId)
