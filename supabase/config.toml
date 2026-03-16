@@ -1,0 +1,13 @@
+project_id = "krkybhborwvcbjzjcghw"
+
+[functions.storefront-api]
+verify_jwt = false
+
+[functions.sms-notifications]
+verify_jwt = false
+
+[functions.otp-sms]
+verify_jwt = false
+
+[functions.push-notifications]
+verify_jwt = false
