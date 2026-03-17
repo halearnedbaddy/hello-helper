@@ -143,10 +143,14 @@ export function ManualCheckoutModal({ isOpen, onClose, product, storeSlug, selle
     setLoading(true);
     try {
       const response = await fetch(
-        `https://pxyyncsnjpuwvnwyfdwx.supabase.co/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(product.id)}`,
+        `${SUPABASE_URL}/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(product.id)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             buyerName: buyerDetails.name,
             buyerPhone: buyerDetails.phone,
