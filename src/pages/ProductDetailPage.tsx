@@ -63,7 +63,13 @@ export function ProductDetailPage() {
       try {
         const response = await fetch(
           `${SUPABASE_URL}/functions/v1/storefront-api/product/${encodeURIComponent(storeSlug)}/${productId}`,
-          { headers: { 'Content-Type': 'application/json' } }
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            }
+          }
         );
         
         const res = await response.json();
