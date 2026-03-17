@@ -11,9 +11,7 @@ import { StorefrontChatWidget } from '@/components/chat/StorefrontChatWidget';
 import { CartDrawer, BuyerDetails } from '@/components/store/CartDrawer';
 import { CartItem } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
-
-const SUPABASE_URL = "https://krkybhborwvcbjzjcghw.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtya3liaGJvcnd2Y2JqempjZ2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTYwNDksImV4cCI6MjA4NzA3MjA0OX0.mwm0aTd9ZBltJD5VgOFN7vZ6jibpKsF8dGdcSwOg1cw";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabaseProject';
 
 interface StorefrontProduct {
   id: string;

@@ -128,7 +128,11 @@ export function ProductDetailPage() {
         `${SUPABASE_URL}/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(item.id)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             buyerName: buyerDetails.name,
             buyerPhone: buyerDetails.phone,

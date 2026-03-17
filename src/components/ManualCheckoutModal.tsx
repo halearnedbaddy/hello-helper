@@ -196,10 +196,14 @@ export function ManualCheckoutModal({ isOpen, onClose, product, storeSlug, selle
 
     try {
       const response = await fetch(
-        `https://pxyyncsnjpuwvnwyfdwx.supabase.co/functions/v1/escrow-api/submit-payment/${transactionId}`,
+        `${SUPABASE_URL}/functions/v1/escrow-api/submit-payment/${transactionId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             paymentMethod: selectedMethod?.payment_type || selectedMethod?.type || 'MPESA',
             paymentReference: paymentDetails.reference,
