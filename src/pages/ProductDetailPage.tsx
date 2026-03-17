@@ -13,9 +13,7 @@ import { CartDrawer, BuyerDetails } from '@/components/store/CartDrawer';
 import { CartItem } from '@/hooks/useCart';
 import { ProductSkeleton } from '@/components/skeletons';
 import { supabase } from '@/integrations/supabase/client';
-
-const SUPABASE_URL = "https://pxyyncsnjpuwvnwyfdwx.supabase.co";
-
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabaseProject';
 interface ProductData {
   id: string;
   name: string;
@@ -65,7 +63,13 @@ export function ProductDetailPage() {
       try {
         const response = await fetch(
           `${SUPABASE_URL}/functions/v1/storefront-api/product/${encodeURIComponent(storeSlug)}/${productId}`,
-          { headers: { 'Content-Type': 'application/json' } }
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            }
+          }
         );
         
         const res = await response.json();
@@ -124,7 +128,11 @@ export function ProductDetailPage() {
         `${SUPABASE_URL}/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(item.id)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             buyerName: buyerDetails.name,
             buyerPhone: buyerDetails.phone,

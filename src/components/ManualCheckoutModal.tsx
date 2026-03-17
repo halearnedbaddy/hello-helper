@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Copy, Check, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/hooks/useCurrency';
-
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabaseProject';
 interface SellerPaymentMethod {
   id: string;
   provider: string;
@@ -143,10 +143,14 @@ export function ManualCheckoutModal({ isOpen, onClose, product, storeSlug, selle
     setLoading(true);
     try {
       const response = await fetch(
-        `https://pxyyncsnjpuwvnwyfdwx.supabase.co/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(product.id)}`,
+        `${SUPABASE_URL}/functions/v1/storefront-api/checkout/${encodeURIComponent(storeSlug)}/${encodeURIComponent(product.id)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             buyerName: buyerDetails.name,
             buyerPhone: buyerDetails.phone,
@@ -192,10 +196,14 @@ export function ManualCheckoutModal({ isOpen, onClose, product, storeSlug, selle
 
     try {
       const response = await fetch(
-        `https://pxyyncsnjpuwvnwyfdwx.supabase.co/functions/v1/escrow-api/submit-payment/${transactionId}`,
+        `${SUPABASE_URL}/functions/v1/escrow-api/submit-payment/${transactionId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             paymentMethod: selectedMethod?.payment_type || selectedMethod?.type || 'MPESA',
             paymentReference: paymentDetails.reference,
