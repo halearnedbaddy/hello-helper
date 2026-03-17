@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Copy, Check, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/hooks/useCurrency';
-
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabaseProject';
 interface SellerPaymentMethod {
   id: string;
   provider: string;

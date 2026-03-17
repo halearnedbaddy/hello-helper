@@ -13,9 +13,7 @@ import { CartDrawer, BuyerDetails } from '@/components/store/CartDrawer';
 import { CartItem } from '@/hooks/useCart';
 import { ProductSkeleton } from '@/components/skeletons';
 import { supabase } from '@/integrations/supabase/client';
-
-const SUPABASE_URL = "https://pxyyncsnjpuwvnwyfdwx.supabase.co";
-
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabaseProject';
 interface ProductData {
   id: string;
   name: string;
