@@ -661,6 +661,67 @@ export type Database = {
         }
         Relationships: []
       }
+      link_analytics: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          ip_hash: string | null
+          product_id: string | null
+          referrer: string | null
+          source: string | null
+          store_id: string | null
+          transaction_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          product_id?: string | null
+          referrer?: string | null
+          source?: string | null
+          store_id?: string | null
+          transaction_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          product_id?: string | null
+          referrer?: string | null
+          source?: string | null
+          store_id?: string | null
+          transaction_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_analytics_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "link_analytics_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "link_analytics_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mpesa_account_balances: {
         Row: {
           available_balance: number | null
@@ -852,10 +913,15 @@ export type Database = {
           currency: string | null
           description: string | null
           dimensions: Json | null
+          discount_min_qty: number | null
+          discount_type: string | null
+          discount_value: number | null
           id: string
           images: string[] | null
+          low_stock_threshold: number | null
           name: string
           price: number
+          promo_code: string | null
           quantity: number | null
           sales_count: number | null
           seo_description: string | null
@@ -875,10 +941,15 @@ export type Database = {
           currency?: string | null
           description?: string | null
           dimensions?: Json | null
+          discount_min_qty?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
           images?: string[] | null
+          low_stock_threshold?: number | null
           name: string
           price?: number
+          promo_code?: string | null
           quantity?: number | null
           sales_count?: number | null
           seo_description?: string | null
@@ -898,10 +969,15 @@ export type Database = {
           currency?: string | null
           description?: string | null
           dimensions?: Json | null
+          discount_min_qty?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
           images?: string[] | null
+          low_stock_threshold?: number | null
           name?: string
           price?: number
+          promo_code?: string | null
           quantity?: number | null
           sales_count?: number | null
           seo_description?: string | null
@@ -965,6 +1041,123 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      quick_replies: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          product_id: string | null
+          reply_template: string
+          seller_id: string
+          store_id: string
+          trigger_question: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          reply_template: string
+          seller_id: string
+          store_id: string
+          trigger_question: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          reply_template?: string
+          seller_id?: string
+          store_id?: string
+          trigger_question?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_replies_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quick_replies_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_packs: {
+        Row: {
+          created_at: string | null
+          generated_at: string | null
+          id: string
+          instagram_caption: string | null
+          instagram_hashtags: string[] | null
+          product_id: string
+          seller_id: string
+          status: string | null
+          store_id: string
+          updated_at: string | null
+          whatsapp_followup_message: string | null
+          whatsapp_launch_message: string | null
+          whatsapp_urgency_message: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          instagram_caption?: string | null
+          instagram_hashtags?: string[] | null
+          product_id: string
+          seller_id: string
+          status?: string | null
+          store_id: string
+          updated_at?: string | null
+          whatsapp_followup_message?: string | null
+          whatsapp_launch_message?: string | null
+          whatsapp_urgency_message?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          instagram_caption?: string | null
+          instagram_hashtags?: string[] | null
+          product_id?: string
+          seller_id?: string
+          status?: string | null
+          store_id?: string
+          updated_at?: string | null
+          whatsapp_followup_message?: string | null
+          whatsapp_launch_message?: string | null
+          whatsapp_urgency_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_packs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_packs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_accounts: {
         Row: {
