@@ -58,6 +58,7 @@ const navItems: NavItem[] = [
       { id: 'products-recommendations', label: 'Recommendations', plan: 'business' },
     ],
   },
+  { id: 'sales-packs' as StoreTab, label: 'Sales Packs', icon: Sparkles },
   {
     id: 'inventory', label: 'Inventory', icon: Box, plan: 'business',
     children: [
