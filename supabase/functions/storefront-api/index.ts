@@ -101,11 +101,23 @@ Deno.serve(async (req) => {
         .eq("status", "published")
         .order("updated_at", { ascending: false });
 
+      // Add stock intelligence to products
+      const enrichedProducts = (products || []).map((p: any) => ({
+        ...p,
+        stock: p.quantity ?? null,
+        is_available: p.quantity === null || p.quantity > 0,
+        availability_note: p.quantity !== null && p.quantity <= 0
+          ? "Sold out — join waitlist"
+          : p.quantity !== null && p.quantity <= 3
+            ? `Only ${p.quantity} left — order now!`
+            : null,
+      }));
+
       return new Response(JSON.stringify({
         success: true,
         data: { 
           ...storeOnly, 
-          products: products || [],
+          products: enrichedProducts,
           seller: sellerProfile || { name: "Seller" },
           sellerProfile: sellerInfo || null,
         },

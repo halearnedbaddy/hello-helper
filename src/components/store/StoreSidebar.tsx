@@ -4,7 +4,7 @@ import {
 } from '@/components/icons';
 import { 
   Users, Megaphone, DollarSign, MessageCircle, Star, HelpCircle, 
-  ChevronDown, ChevronRight, Lock, Box
+  ChevronDown, ChevronRight, Lock, Box, Sparkles
 } from 'lucide-react';
 import { canAccessStoreFeature, type StorePlanTier } from '@/config/subscriptionPlans';
 
@@ -12,6 +12,7 @@ export type StoreTab =
   | 'dashboard'
   | 'orders'
   | 'products' | 'products-all' | 'products-categories' | 'products-bulk' | 'products-recommendations'
+  | 'sales-packs'
   | 'inventory' | 'inventory-stock' | 'inventory-locations' | 'inventory-transfers' | 'inventory-suppliers' | 'inventory-reorder'
   | 'customers' | 'customers-all' | 'customers-segments' | 'customers-analytics' | 'customers-loyalty'
   | 'marketing' | 'marketing-email' | 'marketing-sms' | 'marketing-cart-recovery' | 'marketing-loyalty' | 'marketing-discounts' | 'marketing-social'
@@ -57,6 +58,7 @@ const navItems: NavItem[] = [
       { id: 'products-recommendations', label: 'Recommendations', plan: 'business' },
     ],
   },
+  { id: 'sales-packs' as StoreTab, label: 'Sales Packs', icon: Sparkles },
   {
     id: 'inventory', label: 'Inventory', icon: Box, plan: 'business',
     children: [

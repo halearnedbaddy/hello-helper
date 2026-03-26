@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.push-notifications]
 verify_jwt = false
+
+[functions.auth-api]
+verify_jwt = false
+
+[functions.sales-pack-api]
+verify_jwt = false
