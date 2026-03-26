@@ -66,10 +66,6 @@ export function SellThisPanel({ product, storeSlug, storeName, onClose }: SellTh
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }, []);
 
-  const shareToWhatsAppStatus = useCallback((text: string) => {
-    // WhatsApp Status sharing via deep link
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-  }, []);
 
   const copyLink = useCallback(async () => {
     try {
@@ -133,7 +129,7 @@ export function SellThisPanel({ product, storeSlug, storeName, onClose }: SellTh
                 <MessageCircle size={18} />
                 WhatsApp
               </button>
-              {navigator.share && (
+              {"share" in navigator && (
                 <button
                   onClick={nativeShare}
                   className="flex items-center gap-2 p-3 bg-muted/50 hover:bg-muted rounded-lg transition text-sm col-span-2"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Check, Share2, MessageCircle, Instagram, Loader2, Sparkles, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Copy, Check, MessageCircle, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabaseProject";
 import { useToast } from "@/hooks/use-toast";
