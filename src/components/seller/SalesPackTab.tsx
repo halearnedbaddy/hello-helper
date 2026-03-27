@@ -50,6 +50,8 @@ export function SalesPackTab() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [packs, setPacks] = useState<Record<string, SalesPack>>({});
   const [quickReplies, setQuickReplies] = useState<Record<string, QuickReply[]>>({});
