@@ -114,6 +114,34 @@ export function SalesPackTab() {
     }
   }, [toast]);
 
+  const generateAllPacks = useCallback(async () => {
+    const ungenerated = products.filter(p => !packs[p.id]);
+    if (ungenerated.length === 0) {
+      toast({ title: "All done!", description: "Sales packs already generated for all products." });
+      return;
+    }
+    setBulkGenerating(true);
+    setBulkProgress({ done: 0, total: ungenerated.length });
+    for (let i = 0; i < ungenerated.length; i++) {
+      const product = ungenerated[i];
+      try {
+        const headers = await getHeaders();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/sales-pack-api/generate`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ productId: product.id, storeId: product.store_id }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setPacks(prev => ({ ...prev, [product.id]: data.data }));
+        }
+      } catch { /* continue on error */ }
+      setBulkProgress({ done: i + 1, total: ungenerated.length });
+    }
+    setBulkGenerating(false);
+    toast({ title: "🎉 Bulk Generation Complete!", description: `Generated packs for ${ungenerated.length} products.` });
+  }, [products, packs, toast]);
+
   const loadPack = useCallback(async (productId: string) => {
     const headers = await getHeaders();
     const res = await fetch(`${SUPABASE_URL}/functions/v1/sales-pack-api/pack/${productId}`, { headers });
