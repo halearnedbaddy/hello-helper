@@ -195,7 +195,7 @@ export function LinkAnalyticsDashboard() {
             <h4 className="text-sm font-semibold text-foreground mb-4">Traffic Sources</h4>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={sourceData as any[]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }: { name: string; percent: number }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}>
+                <Pie data={sourceData as any[]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(props: any) => `${props.name || ''} (${((props.percent ?? 0) * 100).toFixed(0)}%)`}>
                   {sourceData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
