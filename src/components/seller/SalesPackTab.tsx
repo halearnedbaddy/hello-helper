@@ -195,11 +195,32 @@ export function SalesPackTab() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">🎨 Auto-Sales Pack Generator</h2>
-        <p className="text-muted-foreground mt-1">
-          Generate ready-to-share WhatsApp messages, Instagram captions, and quick reply templates for each product — in seconds.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">🎨 Auto-Sales Pack Generator</h2>
+          <p className="text-muted-foreground mt-1">
+            Generate ready-to-share WhatsApp messages, Instagram captions, and quick reply templates for each product — in seconds.
+          </p>
+        </div>
+        {products.length > 1 && (
+          <button
+            onClick={generateAllPacks}
+            disabled={bulkGenerating}
+            className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+          >
+            {bulkGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {bulkProgress.done}/{bulkProgress.total}
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                Generate All
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {products.length === 0 ? (
