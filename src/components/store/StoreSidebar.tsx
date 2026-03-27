@@ -13,6 +13,7 @@ export type StoreTab =
   | 'orders'
   | 'products' | 'products-all' | 'products-categories' | 'products-bulk' | 'products-recommendations'
   | 'payment-links'
+  | 'link-analytics'
   | 'sales-packs'
   | 'inventory' | 'inventory-stock' | 'inventory-locations' | 'inventory-transfers' | 'inventory-suppliers' | 'inventory-reorder'
   | 'customers' | 'customers-all' | 'customers-segments' | 'customers-analytics' | 'customers-loyalty'
@@ -60,6 +61,7 @@ const navItems: NavItem[] = [
     ],
   },
   { id: 'payment-links' as StoreTab, label: 'Payment Links', icon: Link2 },
+  { id: 'link-analytics' as StoreTab, label: 'Link Analytics', icon: BarChartIcon },
   { id: 'sales-packs' as StoreTab, label: 'Sales Packs', icon: Sparkles },
   {
     id: 'inventory', label: 'Inventory', icon: Box, plan: 'business',
