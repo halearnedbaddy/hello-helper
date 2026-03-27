@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
             available_balance: 0,
             pending_balance: 0,
             total_earned: 0,
-            total_spent: 0,
           })
           .select()
           .single();
@@ -113,7 +112,6 @@ Deno.serve(async (req) => {
             available_balance: 0,
             pending_balance: 0,
             total_earned: 0,
-            total_spent: 0,
           })
           .select()
           .single();
