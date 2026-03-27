@@ -168,6 +168,7 @@ export function StoreProducts({ storeSlug, bulkMode: bulkModeProp }: StoreProduc
   
   // Add Product Modal State
   const [showAddModal, setShowAddModal] = useState(false);
+  const [sellThisProduct, setSellThisProduct] = useState<Product | null>(null);
   const [addForm, setAddForm] = useState({ name: '', price: '', description: '', imageUrl: '', sku: '', compareAtPrice: '', cost: '', categoryId: '', quantity: '' });
   const [addingProduct, setAddingProduct] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -725,6 +726,7 @@ export function StoreProducts({ storeSlug, bulkMode: bulkModeProp }: StoreProduc
                 onDuplicate={handleDuplicate}
                 onToggleSelect={toggleSelect}
                 onCopyLink={copyPaymentLink}
+                onSellThis={(p) => setSellThisProduct(p)}
                 formatCurrency={formatCurrency}
                 getPlatformIcon={getPlatformIcon}
               />
@@ -1038,6 +1040,28 @@ export function StoreProducts({ storeSlug, bulkMode: bulkModeProp }: StoreProduc
         mode={paymentFlow.mode}
         onComplete={handlePaymentComplete}
       />
+
+      {/* Sell This Panel */}
+      {sellThisProduct && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-end">
+          <div className="w-full max-w-md h-full bg-card overflow-y-auto shadow-2xl animate-in slide-in-from-right">
+            <SellThisPanel
+              product={{
+                id: sellThisProduct.id,
+                name: sellThisProduct.name,
+                price: sellThisProduct.price,
+                images: sellThisProduct.images,
+                store_id: '',
+                currency: 'KES',
+                description: sellThisProduct.description,
+              }}
+              storeSlug={storeSlug || ''}
+              storeName=""
+              onClose={() => setSellThisProduct(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
