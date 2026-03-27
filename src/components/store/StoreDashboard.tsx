@@ -22,6 +22,7 @@ const SupportTab = lazy(() => import('@/components/support/SupportTab').then(m =
 const StoreSettingsTab = lazy(() => import('./StoreSettingsTab').then(m => ({ default: m.StoreSettingsTab })));
 const SalesPackTab = lazy(() => import('@/components/seller/SalesPackTab').then(m => ({ default: m.SalesPackTab })));
 const CreateLinkTab = lazy(() => import('@/components/seller/CreateLinkTab').then(m => ({ default: m.CreateLinkTab })));
+const LinkAnalyticsDashboard = lazy(() => import('@/components/analytics/LinkAnalyticsDashboard').then(m => ({ default: m.LinkAnalyticsDashboard })));
 
 interface StoreData {
   id: string;
@@ -64,6 +65,8 @@ export function StoreDashboard({ store, onStoreUpdate, onBack }: StoreDashboardP
         return <StoreOrders />;
       case 'payment-links':
         return <CreateLinkTab />;
+      case 'link-analytics':
+        return <LinkAnalyticsDashboard />;
       case 'sales-packs':
         return <SalesPackTab />;
       case 'products':
