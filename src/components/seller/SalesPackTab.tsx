@@ -50,6 +50,8 @@ export function SalesPackTab() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [packs, setPacks] = useState<Record<string, SalesPack>>({});
   const [quickReplies, setQuickReplies] = useState<Record<string, QuickReply[]>>({});
@@ -112,6 +114,34 @@ export function SalesPackTab() {
     }
   }, [toast]);
 
+  const generateAllPacks = useCallback(async () => {
+    const ungenerated = products.filter(p => !packs[p.id]);
+    if (ungenerated.length === 0) {
+      toast({ title: "All done!", description: "Sales packs already generated for all products." });
+      return;
+    }
+    setBulkGenerating(true);
+    setBulkProgress({ done: 0, total: ungenerated.length });
+    for (let i = 0; i < ungenerated.length; i++) {
+      const product = ungenerated[i];
+      try {
+        const headers = await getHeaders();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/sales-pack-api/generate`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ productId: product.id, storeId: product.store_id }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setPacks(prev => ({ ...prev, [product.id]: data.data }));
+        }
+      } catch { /* continue on error */ }
+      setBulkProgress({ done: i + 1, total: ungenerated.length });
+    }
+    setBulkGenerating(false);
+    toast({ title: "🎉 Bulk Generation Complete!", description: `Generated packs for ${ungenerated.length} products.` });
+  }, [products, packs, toast]);
+
   const loadPack = useCallback(async (productId: string) => {
     const headers = await getHeaders();
     const res = await fetch(`${SUPABASE_URL}/functions/v1/sales-pack-api/pack/${productId}`, { headers });
@@ -165,11 +195,32 @@ export function SalesPackTab() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">🎨 Auto-Sales Pack Generator</h2>
-        <p className="text-muted-foreground mt-1">
-          Generate ready-to-share WhatsApp messages, Instagram captions, and quick reply templates for each product — in seconds.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">🎨 Auto-Sales Pack Generator</h2>
+          <p className="text-muted-foreground mt-1">
+            Generate ready-to-share WhatsApp messages, Instagram captions, and quick reply templates for each product — in seconds.
+          </p>
+        </div>
+        {products.length > 1 && (
+          <button
+            onClick={generateAllPacks}
+            disabled={bulkGenerating}
+            className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+          >
+            {bulkGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {bulkProgress.done}/{bulkProgress.total}
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                Generate All
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {products.length === 0 ? (
