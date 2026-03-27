@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { PackageIcon, SearchIcon, EditIcon, ArchiveIcon, ExternalLinkIcon, ImageIcon, RefreshCwIcon, LoaderIcon, CheckIcon, XIcon, InstagramIcon, FacebookIcon, LinkedInIcon, PlusIcon, LinkIcon, ImagePlusIcon, TrashIcon, CopyIcon, CheckCircleIcon, UploadIcon, ShareIcon, BarChartIcon } from '@/components/icons';
-import { Download, Copy, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Copy, Loader2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { SellThisPanel } from '@/components/seller/SellThisPanel';
 import { api } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -60,13 +61,14 @@ interface ProductCardProps {
   onDuplicate: (product: Product) => void;
   onToggleSelect: (id: string) => void;
   onCopyLink: (product: Product) => void;
+  onSellThis: (product: Product) => void;
   formatCurrency: (amount: number, currency?: string) => string;
   getPlatformIcon: (platform?: string) => React.ReactNode;
 }
 
 const ProductCard = memo(function ProductCard({
   product, paymentLink, isDeleting, isCopied, isSelected, bulkMode, publishing, duplicatingId,
-  onEdit, onPublish, onArchive, onDelete, onDuplicate, onToggleSelect, onCopyLink, formatCurrency, getPlatformIcon,
+  onEdit, onPublish, onArchive, onDelete, onDuplicate, onToggleSelect, onCopyLink, onSellThis, formatCurrency, getPlatformIcon,
 }: ProductCardProps) {
   return (
     <div className={`bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group relative ${isSelected ? 'ring-2 ring-primary' : 'border-border'}`}>
@@ -120,6 +122,12 @@ const ProductCard = memo(function ProductCard({
             {publishing === product.id ? 'Publishing...' : 'Publish to Get Link'}
           </button>
         ) : null}
+        {product.status === 'PUBLISHED' && (
+          <button onClick={() => onSellThis(product)} className="w-full mt-2 text-sm px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition font-medium flex items-center justify-center gap-2">
+            <MessageCircle size={14} />
+            Sell This
+          </button>
+        )}
       </div>
     </div>
   );
